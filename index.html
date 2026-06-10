@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prompt Display</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-page:       #f5f4f0;
+      --bg-card:       #ffffff;
+      --bg-header:     #f1f0ec;
+      --border:        rgba(0, 0, 0, 0.12);
+      --border-hover:  rgba(0, 0, 0, 0.28);
+      --text-primary:  #1a1a18;
+      --text-secondary:#6b6b67;
+      --text-success:  #1d6b45;
+      --border-success:rgba(29, 110, 69, 0.45);
+      --radius-md:     8px;
+      --radius-lg:     12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page:       #1c1c1a;
+        --bg-card:       #252523;
+        --bg-header:     #2c2c2a;
+        --border:        rgba(255, 255, 255, 0.10);
+        --border-hover:  rgba(255, 255, 255, 0.25);
+        --text-primary:  #e8e7e2;
+        --text-secondary:#9a9994;
+        --text-success:  #5dcaa5;
+        --border-success:rgba(93, 202, 165, 0.45);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-page);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem 1.25rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 0.5px solid var(--border);
+      background: var(--bg-header);
+    }
+
+    .card-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .copy-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text-secondary);
+      background: transparent;
+      border: 0.5px solid var(--border-hover);
+      border-radius: var(--radius-md);
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      line-height: 1;
+    }
+
+    .copy-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      background: var(--border);
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+    }
+
+    .copy-btn.success {
+      color: var(--text-success);
+      border-color: var(--border-success);
+    }
+
+    .card-body {
+      padding: 1.5rem 1.25rem;
+    }
+
+    /* Generieke styling voor de geparseerde Markdown content */
+    .markdown-body {
+      font-family: 'Space Mono', monospace;
+      font-size: 13.5px;
+      line-height: 1.85;
+      color: var(--text-primary);
+    }
+
+    /* Zorgt dat Markdown elementen er direct goed uitzien */
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+      color: var(--text-secondary);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 1.75rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 0.5px solid var(--border);
+      padding-bottom: 4px;
+    }
+    
+    .markdown-body h1:first-child, .markdown-body h2:first-child {
+      margin-top: 0;
+    }
+
+    .markdown-body p {
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+    }
+
+    .markdown-body ul, .markdown-body ol {
+      margin-left: 1.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .markdown-body li {
+      margin-bottom: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-label">Prompt Viewer</span>
+        
+        <button class="copy-btn" id="copyBtn" onclick="handleCopy()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          <span id="copyLabel">Kopiëren</span>
+        </button>
+
+      </div>
+      <div class="card-body">
+        <div id="content" class="markdown-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="monospace.js"></script>
+  
+  <script>
+    // Zodra de pagina en data geladen zijn, render de Markdown direct naar HTML
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof rawPromptMarkdown !== 'undefined') {
+        document.getElementById('content').innerHTML = marked.parse(rawPromptMarkdown);
+      } else {
+        document.getElementById('content').textContent = "Geen data gevonden. Controleer monospace.js";
+      }
+    });
+
+    // Kopiëren van de rauwe Markdown naar klembord
+    function handleCopy() {
+      navigator.clipboard.writeText(rawPromptMarkdown).then(() => {
+        const btn = document.getElementById('copyBtn');
+        const label = document.getElementById('copyLabel');
+        
+        btn.classList.add('success');
+        label.textContent = 'Gekopieerd!';
+        
+        setTimeout(() => {
+          btn.classList.remove('success');
+          label.textContent = 'Kopiëren';
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>
